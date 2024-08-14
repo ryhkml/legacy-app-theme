@@ -2,33 +2,38 @@
 
 set -e
 
-type gsettings
-type flatpak
+type gsettings 1>/dev/null
+type flatpak 1>/dev/null
 
 echo "Please wait"
 
 ID=$1
 
-if [ ! -d "~/.var/app/$ID" ]; then
+if [ -z "$ID" ] || [ ! -d "$HOME/.var/app/$ID" ]; then
 	echo "Invalid id"
 	exit 1
 fi
 
 THEME_NAME=$(gsettings get org.gnome.desktop.interface gtk-theme | sed "s/'//g")
 
-if [ ! -d "~/.var/app/$ID/config/gtk-3.0" ]; then
-	mkdir -p ~/.var/app/$ID/config/gtk-3.0
+if [ -z "$THEME_NAME" ]; then
+	echo "Invalid theme name"
+	exit 1
+fi
+
+if [ ! -d "$HOME/.var/app/$ID/config/gtk-3.0" ]; then
+	mkdir -p $HOME/.var/app/$ID/config/gtk-3.0
 	sleep 0.001
 fi
 
-cp -r ~/.themes/$THEME_NAME ~/.var/app/$ID/config/gtk-3.0/
+cp -r $HOME/.themes/$THEME_NAME $HOME/.var/app/$ID/config/gtk-3.0/
 
-cat <<EOF >~/.var/app/$ID/config/gtk-3.0/settings.ini
+cat <<EOF >$HOME/.var/app/$ID/config/gtk-3.0/settings.ini
 [Settings]
 gtk-theme-name=$THEME_NAME
 EOF
 
-flatpak override -u --filesystem=~/.themes $ID
+flatpak override -u --filesystem=$HOME/.themes $ID
 
 echo "$THEME_NAME theme applied in $ID"
 echo "Please restart the application"
